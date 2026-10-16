@@ -117,7 +117,7 @@ Membership changes are asynchronous. The group's steward batches an add into an 
 
 1. In the **Members** card, click **Add member**.
 1. Paste Bob's address, then click **Add**.
-1. The first time only, an explainer appears: "Adding a member isn't instant. Membership updates apply on a timer, so a new member can take up to a minute to appear." Click **Add member** to confirm.
+1. An explainer appears: "Adding a member isn't instant. Membership updates apply on a timer, so a new member can take up to a minute to appear." Click **Add member** to confirm.
 
    - Select **Don't show this again** to skip the explainer next time.
 

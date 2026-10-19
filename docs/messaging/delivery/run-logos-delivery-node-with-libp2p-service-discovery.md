@@ -34,7 +34,8 @@ The node does not survive a daemon restart, and without a `nodekey` in its confi
 - `curl`, `tar`, and `jq`
 - Network access to `github.com` for the release and catalogue downloads, and outbound TCP to the `logos.dev` entry nodes on port `30303`
 - About 1 GB of free disk space
-
+- [`logosctl`](https://github.com/logos-co/logos-logoscore-cli/releases/tag/0.3.2) installed.
+   - Install it by running `curl -fsSL https://raw.githubusercontent.com/logos-co/logos-docs/main/resources/scripts/install-logosctl.sh | sudo sh`
 :::
 
 ## What to expect
@@ -43,53 +44,7 @@ The node does not survive a daemon restart, and without a `nodekey` in its confi
 - You can confirm from a trace file that discovery runs on `libp2p_module` and repeats every 60 seconds.
 - You can list the other delivery nodes your node discovered through the DHT.
 
-## Step 1: Download `logosctl`
-
-Run every command in this procedure in one shell, from one working directory.
-
-1. Create a working directory and change into it:
-
-   ```bash
-   mkdir -p ~/logos-disco && cd ~/logos-disco
-   ```
-
-1. Download `logosctl` 0.3.2 for your platform. Set `PLAT` to one of `aarch64-macos`, `x86_64-linux`, or `aarch64-linux`:
-
-   ```bash
-   PLAT=aarch64-macos
-   curl -fsSL https://github.com/logos-co/logos-logoscore-cli/releases/download/0.3.2/logosctl-$PLAT.tar.gz | tar xz
-   ```
-
-1. Point `LOGOSCTL` at the binary:
-
-   - On macOS, the archive holds a `bin/`, `lib/`, and `modules/` directory. Run the binary where it was unpacked; it finds its libraries and bundled modules relative to its own path:
-
-     ```bash
-     LOGOSCTL=$PWD/logosctl-$PLAT/bin/logosctl
-     ```
-
-   - On Linux, the archive holds a single AppImage. Unpack it, which avoids needing FUSE, and use its `AppRun`:
-
-     ```bash
-     ./logosctl-*.AppImage --appimage-extract >/dev/null
-     LOGOSCTL=$PWD/squashfs-root/AppRun
-     ```
-
-1. Check the version:
-
-   ```bash
-   $LOGOSCTL --version
-   ```
-
-   **Expected result:** `logosctl version 0.3.2`.
-
-1. Set the session directory. Every `logosctl` command in this shell uses it to hold the daemon's state, its logs, and the installed modules:
-
-   ```bash
-   export LOGOSCTL_CONFIG_DIR=$PWD/session
-   ```
-
-## Step 2: Start the daemon
+## Step 1: Start the daemon
 
 The daemon passes its environment to the modules it hosts, so set any module variables on the `daemon start` command.
 
@@ -97,19 +52,19 @@ The daemon passes its environment to the modules it hosts, so set any module var
 
    ```bash
    LD_DISCO_TRACE=$PWD/disco.trace \
-     $LOGOSCTL daemon start --detach
+     logosctl daemon start --detach
    ```
 
    - `LD_DISCO_TRACE` is optional. When set, `delivery_module` writes every call it makes to `libp2p_module` to that file, which you read in [Step 5](#step-5-check-that-discovery-runs-on-libp2p_module).
 
    **Expected result:** `Daemon started (pid N)` and the path of its log, `session/logs/daemon.log`. The command returns once the daemon is ready.
 
-## Step 3: Install and load the modules
+## Step 2: Install and load the modules
 
 1. Refresh the [catalogue](../../get-started/glossary.md#catalogue):
 
    ```bash
-   $LOGOSCTL catalog refresh
+   logosctl catalog refresh
    ```
 
    **Expected result:** `{"success":true}`.
@@ -117,7 +72,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 1. Install the [delivery module](../../get-started/glossary.md#delivery-module) from the official catalogue, together with its optional dependencies:
 
    ```bash
-   $LOGOSCTL package install delivery_module --yes
+   logosctl package install delivery_module --yes
    ```
 
    **Expected result:** `"status":"ok"`, with `"installed":["delivery_module","libp2p_module","liblogos_lez_rln_module","liblogos_rln_module"]`. The RLN modules are installed but stay unused, because `logos.dev` runs without RLN.
@@ -125,17 +80,17 @@ The daemon passes its environment to the modules it hosts, so set any module var
 1. Load the delivery module:
 
    ```bash
-   $LOGOSCTL module load delivery_module
+   logosctl module load delivery_module
    ```
 
    **Expected result:** `"status":"ok"`, with `libp2p_module`, `liblogos_rln_module`, and `liblogos_lez_rln_module` listed in `"dependencies_loaded"`, in any order.
 
-## Step 4: Create and start the delivery node
+## Step 3: Create and start the delivery node
 
 1. Capture the node's events in the background. The watcher only sees events emitted after it attaches, so start it first:
 
    ```bash
-   $LOGOSCTL --json watch delivery_module >> events.jsonl 2>&1 &
+   logosctl --json watch delivery_module >> events.jsonl 2>&1 &
    ```
 
 1. Write the node config:
@@ -159,7 +114,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 1. Create the node:
 
    ```bash
-   $LOGOSCTL --json call delivery_module createNode @$PWD/node.json
+   logosctl --json call delivery_module createNode @$PWD/node.json
    ```
 
    **Expected result:** `"success":true`.
@@ -167,7 +122,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 1. Start the node:
 
    ```bash
-   $LOGOSCTL --json call delivery_module start
+   logosctl --json call delivery_module start
    ```
 
    - `start` returns at once, always with `"success":true`. The node comes up in the background and reports the outcome as an event.
@@ -189,7 +144,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 
    - A `nodeStarted` event with `"arg0":false` carries the reason in `arg1` and is followed by `nodeStopped`: the node has stopped itself. See [Troubleshooting](#troubleshooting-libp2p-service-discovery).
 
-## Step 5: Check that discovery runs on libp2p_module
+## Step 4: Check that discovery runs on libp2p_module
 
 1. Read the trace file:
 
@@ -210,13 +165,13 @@ The daemon passes its environment to the modules it hosts, so set any module var
    - The first lookup runs a few seconds after `start`, then every 60 seconds.
    - `peers=[...]` shows the last 8 characters of each [peer ID](../../get-started/glossary.md#peer-id), and includes your node's own record.
 
-## Step 6: List the discovered delivery nodes
+## Step 5: List the discovered delivery nodes
 
 1. Look up the `/logos/delivery` service and filter out your own node:
 
    ```bash
-   ME=$($LOGOSCTL --json call delivery_module getNodeInfo MyPeerId | jq -r '.result.value')
-   $LOGOSCTL --json call libp2p_module discoLookup /logos/delivery "" \
+   ME=$(logosctl --json call delivery_module getNodeInfo MyPeerId | jq -r '.result.value')
+   logosctl --json call libp2p_module discoLookup /logos/delivery "" \
      | jq --arg me "$ME" '[.result.value[] | select(.peerId != $me) | .peerId]'
    ```
 
@@ -225,7 +180,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 1. Confirm the node also joined [Relay](../../get-started/glossary.md#relay) through the discovery built into the preset:
 
    ```bash
-   $LOGOSCTL --json call delivery_module getNodeInfo Metrics | jq -r '.result.value' \
+   logosctl --json call delivery_module getNodeInfo Metrics | jq -r '.result.value' \
      | grep -E '^logos_delivery_connected_peers\{.*relay'
    ```
 
@@ -234,7 +189,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 1. Stop the daemon when you're finished:
 
    ```bash
-   $LOGOSCTL daemon stop
+   logosctl daemon stop
    ```
 
    - This unloads the modules. The installed packages stay in `session/`. To run the node again, start the daemon, then repeat `module load`, the event watcher, `createNode`, and `start`.
@@ -243,7 +198,7 @@ The daemon passes its environment to the modules it hosts, so set any module var
 
 ### `nodeStarted` reports `createNode: expected a result object, got null`
 
-The installed `libp2p_module` is older than this `delivery_module` needs; version 1.0.0 lacks the API the delivery module configures it through. `disco.trace` shows `libp2p createNode REFUSED`, and the node stops itself. Run `$LOGOSCTL package install libp2p_module --yes`, restart the daemon, and repeat [Step 3](#step-3-install-and-load-the-modules) and [Step 4](#step-4-create-and-start-the-delivery-node).
+The installed `libp2p_module` is older than this `delivery_module` needs; version 1.0.0 lacks the API the delivery module configures it through. `disco.trace` shows `libp2p createNode REFUSED`, and the node stops itself. Run `logosctl package install libp2p_module --yes`, restart the daemon, and repeat [Step 2](#step-2-install-and-load-the-modules) and [Step 3](#step-3-create-and-start-the-delivery-node).
 
 ### `nodeStarted` reports `libp2p_module is not available (not installed or not loaded)`
 
@@ -264,14 +219,14 @@ The checks ran before the node came up. Wait a few seconds after `start` and run
 ```bash
 LIBP2P_MODULE_CONFIG='{"addrs":["/ip4/0.0.0.0/tcp/45000"],"transport":"tcp","maxConnections":100}' \
 LD_DISCO_TRACE=$PWD/disco.trace \
-  $LOGOSCTL daemon start --detach
+  logosctl daemon start --detach
 ```
 
 `delivery_module` always sets `bootstrapNodes`, `mountKad`, and `mountServiceDiscovery` itself, overriding any values in this variable.
 
 ### `package install` can't find `delivery_module` or `libp2p_module`
 
-The session's catalogue index is stale. Run `$LOGOSCTL catalog refresh` and try again.
+The session's catalogue index is stale. Run `logosctl catalog refresh` and try again.
 
 ### Every command fails with `no daemon`
 
@@ -280,9 +235,3 @@ The command isn't using the daemon's session. Check that `LOGOSCTL_CONFIG_DIR` a
 ### Logs and trace files contain identifying data
 
 `session/logs/daemon.log` and the `LD_DISCO_TRACE` file contain peer IDs and IP addresses. Redact them before attaching either to a public issue.
-
-### Known constraints
-
-- Windows is not supported.
-- Kademlia through `libp2p_module` is the only plugin discovery backend.
-- Docker Compose deployments are not covered by this procedure.

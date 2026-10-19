@@ -128,8 +128,8 @@ The whole module is one entry point, `start()`. It creates the node with mix, ha
            R"("messagingOverrides":{"anonymityLevel":"Required"}})");
        if (!created.success) return "createNode failed: " + created.error;
 
-       auto started = delivery.start();
-       if (!started.success) return "start failed: " + started.error;
+       // No delivery.start() here: chat_module.init() below starts the node it
+       // adopts, and starting it a second time crashes delivery_module.
 
        // Empty config: chat adopts the node created above, so its own node
        // config is never used.

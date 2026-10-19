@@ -56,7 +56,7 @@ If you are running A and B on two separate machines, do the first action on each
 1. Start instance B against its own data directory:
 
    ```bash
-   basecamp --user-dir ~/logos-basecamp-b
+   ./LogosBasecamp-Desktop-*-x86_64.AppImage --user-dir ~/logos-basecamp-b
    ```
 
    - You can set the `LOGOS_USER_DIR` environment variable instead of passing `--user-dir`.
@@ -68,7 +68,7 @@ If you are running A and B on two separate machines, do the first action on each
 **In each instance:**
 
 1. In the left bar, select **Package Manager** and browse the online [catalogue](../../get-started/glossary.md#catalogue).
-1. Install the **Delivery Demo** [package](../../get-started/glossary.md#package) (`logos_delivery_demo`).
+1. Install the **Delivery Demo** [package](../../get-started/glossary.md#package) (`delivery_demo`).
 1. Install the **Chat** package (`chat_ui`).
 
    **Expected result:** both apps appear on that instance's app grid.

@@ -8,7 +8,7 @@ authors: osmaczko, kashepavadan
 owner: logos
 doc_version: 1
 slug: send-group-messages-logos-chat
-sidebar_position: 2.5
+sidebar_position: 2
 ---
 
 # Send group messages with the Logos Chat app
@@ -97,7 +97,7 @@ Each instance needs its own session directory. Each delivery node picks its own 
 
 1. Wait until the account card shows **Online**.
 1. Click the copy button next to the address on the account card (**Copy my address**).
-1. Send the address to Alice through any [out-of-band](../../get-started/glossary.md#out-of-band) [channel](../../get-started/glossary.md#channel).
+1. Send the address to Alice through any [out-of-band](../../get-started/glossary.md#out-of-band) communication channel.
 
 ## Step 3: Create the group
 

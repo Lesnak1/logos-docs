@@ -31,11 +31,11 @@ The flow takes 15 to 30 minutes once the payer account is funded. Funding by bri
    - macOS (Apple Silicon)
    - Linux (x86-64 or aarch64)
 - `curl`, `tar`, and `python3`
-- Network access to `github.com` for the release and catalogue downloads, and to the testnet sequencer at `http://209.38.241.182:3240/`
+- Network access to `github.com` for the release and catalogue downloads, and to the testnet sequencer at `https://testnet.lez.logos.co/`
 - About 1 GB of free disk space. The `logosctl` release is about 100 MB and the modules about 300 MB.
 - `250000000` units of native LEZ tokens for the node's payer account, from one of these sources:
    - A Logos Blockchain wallet you can [bridge assets](../../blockchain/zone-sdk/bridge-assets-between-blockchain-and-zone.md) from. Testnet has no faucet.
-   - A LEZ account you already hold, with about `270000000` units so it can cover the transfer's fee reserve.
+   - A LEZ account you already hold on the testnet zone, with about `270000000` units so it can cover the transfer's fee reserve.
 
 :::
 
@@ -93,7 +93,7 @@ Run every command in this procedure in one shell, from one working directory.
 
 ## Step 2: Start the daemon with a wallet home
 
-The node keeps its wallet, including its private key, in a wallet home directory. There is nothing to configure: the node finds the testnet sequencer by itself from the registry the `logos.test` preset names.
+The node keeps its wallet, including its private key, in a wallet home directory. There is nothing to configure: the `logos.test` preset names the registry as `logos:testnet:<config account>`, and the LEZ RLN module maps `testnet` to the testnet sequencer from its built-in network table. The directory only fixes where the wallet lives.
 
 1. Create an empty wallet home:
 
@@ -133,9 +133,9 @@ The node keeps its wallet, including its private key, in a wallet home directory
    $LOGOSCTL package ls
    ```
 
-   **Expected result:** `delivery_module` 0.3.0 or later, `liblogos_rln_module` 0.10.0 or later, and `liblogos_lez_rln_module` 4.2.1 or later, each with source `user`.
+   **Expected result:** `delivery_module` 0.3.3 or later, `liblogos_rln_module` 0.12.0 or later, and `liblogos_lez_rln_module` 5.1.0 or later, each with source `user`.
 
-   - Older RLN modules don't know the testnet network, and older LEZ RLN modules reserve a fixed fee the testnet rejects.
+   - Older delivery modules point `logos.test` at a registry that is no longer used, and older LEZ RLN modules link a LEZ wallet that can't sync the LEZ v0.3.1 testnet zone.
 
 1. Load the delivery module. This also loads the RLN modules, which are its optional dependencies:
 
@@ -169,7 +169,7 @@ The node keeps its wallet, including its private key, in a wallet home directory
    | `preset` | `logos.test` brings the network settings (cluster 2, 8 auto-shards, built-in entry nodes) and its RLN settings: the registry on the LEZ testnet, the RLN identifier, and the epoch size. |
    | `messagingOverrides` | Optional per-layer settings, for example `{"tcp-port": 30303}`. Keep extra keys inside it: a bare top-level key switches parsing to the legacy flat shape. |
 
-   **Expected result:** `"success":true`. Creating the node also starts the RLN module on the registry that the preset names. The LEZ RLN module writes `wallet-home/wallet_config.json`, pointing at the testnet sequencer, and `wallet-home/network.json`. From here on, the node registers itself once its payer account is funded.
+   **Expected result:** `"success":true`. Creating the node also starts the RLN module on the registry that the preset names. The LEZ RLN module writes `wallet-home/wallet_config.json`, pointing at the testnet sequencer, and `wallet-home/network.json`, containing `{"network":"testnet","source":"table"}`. From here on, the node registers itself once its payer account is funded.
 
 1. Poll the RLN state until it reports `"state":"Ready"`:
 
@@ -192,7 +192,7 @@ The node keeps its wallet, including its private key, in a wallet home directory
 
 ## Step 5: Fund the node's payer account
 
-The node derives a payer account from its wallet. It needs `250000000` native units: the registry's price plus a fee reserve derived from the chain's base fee (`182800000` at the testnet's minimum fee). A registration spends about `75000000`; the rest stays in the payer account.
+The node derives a payer account from its wallet. To register, it must hold the registry's price plus a fee reserve derived from the chain's base fee: `182800000` in total at the testnet's minimum fee, and more if fees rise. Sending `250000000` native units leaves headroom. The unused part of the reserve is refunded: a registration spends about `75000000`, and the rest stays in the payer account.
 
 1. Poll the wallet status until `state` is `ready`:
 
@@ -219,8 +219,8 @@ The node derives a payer account from its wallet. It needs `250000000` native un
 
 1. Send `250000000` native units to the payer account:
 
-   - To bridge from the Logos Blockchain, follow [Bridge assets between the blockchain and a zone](../../blockchain/zone-sdk/bridge-assets-between-blockchain-and-zone.md). A deposit is credited on LEZ only once it is final on the blockchain, about an hour after you submit it.
-   - To transfer from an existing LEZ account, send to the `Public/<base58>` address. A transfer carries a fee reserve of about `17000000` on top of the amount; all but the actual fee (about `100000`) is refunded to the sender.
+   - To bridge from the Logos Blockchain, follow [Bridge assets between the blockchain and a zone](../../blockchain/zone-sdk/bridge-assets-between-blockchain-and-zone.md). A deposit is credited on LEZ only once it is final on the blockchain, about an hour after you submit it. The deposit's fee is paid on the blockchain side.
+   - To transfer from an existing LEZ account, send to the `Public/<base58>` address. A transfer carries a fee reserve of about `19000000` on top of the amount, at the minimum fee for the wallet's standard 2M gas limit; all but the actual fee (about `100000`) is refunded to the sender.
 
 1. Check the payer's balance. An empty argument file means the node's own payer:
 
@@ -323,16 +323,22 @@ The installed `delivery_module` is older than 0.3.0, where `logos.test` has RLN 
 
 ### `rlnState` reports `Failed`
 
-The reply carries the reason. A common one is a hand-written `wallet_config.json`, or a `LEZ_RLN_SEQUENCER` variable, pointing at a sequencer that isn't the testnet one, so the registry can't be found on-chain. Start with an empty `wallet-home/` to let the module pick the sequencer.
+The reply carries the reason. A common one is a hand-written `wallet_config.json`, or a `LEZ_RLN_SEQUENCER` variable, pointing at a sequencer that isn't the testnet one, so the registry can't be found on-chain. Start with an empty `wallet-home/` to let the module pick the sequencer. The module reads `LEZ_RLN_SEQUENCER` only when `wallet-home/` has no `wallet_config.json` yet, and never rewrites an existing one.
+
+Another is a `delivery_module` older than 0.3.3, whose `logos.test` preset names the old registry `logos:testnet:841312e9…`, which is no longer used. Compare the `registryId` from `rlnState` with the one under [Known constraints](#known-constraints), and upgrade with `$LOGOSCTL package install delivery_module -y`.
+
+### `wallet_status` reports `failed`, or `daemon.log` shows `Unexpected variant tag`
+
+The installed `liblogos_lez_rln_module` is older than 5.1.0 and links a LEZ v0.3.0 wallet, which can't read LEZ v0.3.1 blocks. The log line reads `Sync failed: Parse error: Unexpected variant tag`. Run `$LOGOSCTL catalog refresh`, upgrade with `$LOGOSCTL package install liblogos_rln_module -y`, and start again with a fresh `wallet-home/`.
 
 ### `wallet_status` stays `pending` with the network selected
 
-The node can't reach the testnet sequencer. Check it from the same machine; this request should answer with a block number:
+The node can't reach the testnet sequencer. Check it from the same machine, using the `sequencer_addr` from `wallet-home/wallet_config.json` (`https://testnet.lez.logos.co/` with current modules); this request should answer with a block number:
 
 ```bash
 curl -sS -X POST -H 'Content-Type: application/json' \
   --data '{"jsonrpc":"2.0","method":"getLastBlockId","params":[],"id":1}' \
-  http://209.38.241.182:3240/
+  https://testnet.lez.logos.co/
 ```
 
 ### `wallet_status` stays `pending` with `no network selected`
@@ -353,7 +359,7 @@ The node waits indefinitely for its payer balance. Check `get_native_balance` an
 
 ### Registration fails with `Incorrect fee`
 
-The payer holds less than the price plus the fee reserve (`182800000` at the minimum fee). Top it up to `250000000`.
+The payer holds less than the price plus the fee reserve (`182800000` in total at the minimum fee). Top it up to `250000000`.
 
 ### Registration never finishes and `daemon.log` contains `outside registry bounds`
 
@@ -393,10 +399,15 @@ A module process from the previous daemon outlived `daemon stop` and still holds
 
 ### Known constraints
 
-For Testnet v0.3, the RLN registry program is deployed to "LEZ classic", a separate zone from the usual LEZ testnet, running LEZ v0.2.5rc3. Its endpoints are:
+For Testnet v0.3, the RLN registry is deployed to the LEZ testnet zone, which runs LEZ v0.3.1. The `logos.test` preset of `delivery_module` 0.3.3 uses it:
 
-| Service | Endpoint |
-|:--------|:---------|
-| Sequencer RPC | `http://209.38.241.182:3240/` |
-| Explorer | `http://209.38.241.182:8288/` |
-| Indexer RPC | `http://209.38.241.182:8979/` |
+| Item | Value |
+|:-----|:------|
+| Sequencer RPC | `https://testnet.lez.logos.co/` |
+| Explorer | `https://explorer.testnet.lez.logos.co/` |
+| Registry ID | `logos:testnet:fd322d32a46ddf57eece9db8d68e9b722262d1f770760fca63b8cb9e7775b971` |
+| Config account | `J3NXPWUspX2zqJU3tUbR6MHmm83aJc5AzvidEaBBKnat` |
+
+Memberships registered under the previous registry (`logos:testnet:841312e9…`) don't carry over; that registry is no longer used. Register a new membership from a funded payer on the LEZ v0.3.1 zone.
+
+For more detail, see the [delivery module's RLN documentation](https://github.com/logos-co/logos-delivery-module/blob/v0.3.3/docs/pages/rln.md).

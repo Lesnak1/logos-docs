@@ -329,7 +329,7 @@ Another is a `delivery_module` older than 0.3.3, whose `logos.test` preset names
 
 ### `wallet_status` reports `failed`, or `daemon.log` shows `Unexpected variant tag`
 
-The installed `liblogos_lez_rln_module` is older than 5.1.0 and links a LEZ v0.3.0 wallet, which can't read LEZ v0.3.1 blocks. The log line reads `Sync failed: Parse error: Unexpected variant tag`. Run `$LOGOSCTL catalog refresh`, upgrade with `$LOGOSCTL package install liblogos_rln_module -y`, and start again with a fresh `wallet-home/`.
+The installed `liblogos_lez_rln_module` is older than 5.1.0 and links a LEZ v0.3.0 wallet, which can't read LEZ v0.3.1 blocks. The log line reads `Sync failed: Parse error: Unexpected variant tag`. Run `$LOGOSCTL catalog refresh`, upgrade with `$LOGOSCTL package install liblogos_lez_rln_module -y`, and start again with a fresh `wallet-home/`.
 
 ### `wallet_status` stays `pending` with the network selected
 

@@ -60,7 +60,7 @@ A lightweight virtual chain of ordered message logs that represent the state of 
 
 ### Channel note
 
-A note locked by a channel, representing the value bridged into that channel's Zone. See [About Mantle](../blockchain/concepts/about-mantle.md#token-bridging)
+A note locked by a channel, representing the value bridged into that channel's Zone. See [About Mantle](../blockchain/concepts/about-mantle.md#token-bridging).
 
 ### CID
 

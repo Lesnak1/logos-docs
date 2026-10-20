@@ -23,6 +23,8 @@ These repositories explain what Logos is building and how to take part, with no 
 | Repository | Description |
 |:---|:---|
 | [logos-docs](https://github.com/logos-co/logos-docs) | Documentation, standards, and templates for Logos projects. |
+| [logos-web](https://github.com/logos-co/logos-web) | Monorepo for logos.co: the website, Field Guide, Research, Payload CMS, and browser demos. |
+| [logos-workspace](https://github.com/logos-co/logos-workspace) | Workspace CLI for developing across interdependent Logos repositories. |
 | [roadmap](https://github.com/logos-co/roadmap) | A Markdown-based view of the Logos roadmap. |
 | [rfp](https://github.com/logos-co/rfp) | Grants for building in the Logos ecosystem. |
  
@@ -104,7 +106,7 @@ The Logos Execution Zone ([LEZ](glossary.md#lez)) is the primary execution layer
 | [logos-lips](https://github.com/logos-co/logos-lips) | Protocol specifications. |
 | [logos-delivery-simulator](https://github.com/logos-messaging/logos-delivery-simulator) | Simulates a network with multiple nodes, traffic, and users. |
 | [logos-delivery-interop-tests](https://github.com/logos-messaging/logos-delivery-interop-tests) | Interoperability tests. No official description; purpose inferred. |
-| [libchat](https://github.com/logos-messaging/libchat) | Supporting library for Logos Chat, written in Rust. |
+| [logos-chat](https://github.com/logos-messaging/logos-chat) | Supporting library for Logos Chat, written in Rust. |
 | [awesome-logos-delivery](https://github.com/logos-messaging/awesome-logos-delivery) | Community-curated list of resources. |
 
 ## Logos Storage
@@ -120,7 +122,7 @@ The Logos Execution Zone ([LEZ](glossary.md#lez)) is the primary execution layer
 | [logos-storage-nim-cs-dist-tests](https://github.com/logos-storage/logos-storage-nim-cs-dist-tests) | Distributed system tests for the node. |
 | [logos-storage-local-harness](https://github.com/logos-storage/logos-storage-local-harness) | A bash harness for running the node without containers. |
 | [transport-over-mix](https://github.com/logos-storage/transport-over-mix) | Transport-layer abstraction over [Mix](glossary.md#mix), with spec and reference implementation. |
-| [libp2p-storage-mix-transport](https://github.com/logos-storage/libp2p-storage-mix-transport) | Experiments with a storage transport over the libp2p Mix protocol. |
+| [libp2p-mix-transport](https://github.com/logos-storage/libp2p-mix-transport) | Experiments with a storage transport over the libp2p Mix protocol. |
 | [mix-hidden-services](https://github.com/logos-storage/mix-hidden-services) | Hidden services over Mix. |
 | [lioness_blockcipher](https://github.com/logos-storage/lioness_blockcipher) | Rust implementation of the LIONESS wide-block cipher. |
 | [logos-storage-docs-obsidian](https://github.com/logos-storage/logos-storage-docs-obsidian) | Indexed, searchable documentation as an Obsidian vault. |

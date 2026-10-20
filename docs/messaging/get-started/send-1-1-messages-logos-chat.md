@@ -8,7 +8,7 @@ authors: igor-sirotin, Khushboo-dev-cpp, kashepavadan
 owner: logos
 doc_version: 1
 slug: send-1-1-messages-logos-chat
-sidebar_position: 2
+sidebar_position: 1
 ---
 
 # Send 1:1 messages with the Logos Chat app
